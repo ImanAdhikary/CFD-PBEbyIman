@@ -1,812 +1,979 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sehat Connect - Telemedicine App Prototype</title>
-    <!-- Load Tailwind CSS -->
+    <title>CFD-PBE Simulation: Antisolvent Crystallization Report</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Define custom colors based on the request (blue + green tones) */
-        :root {
-            --color-primary: #4f46e5; /* Indigo 600 */
-            --color-accent: #10b981; /* Emerald 500 */
-        }
-        .bg-primary { background-color: var(--color-primary); }
-        .bg-accent { background-color: var(--color-accent); }
-        .text-primary { color: var(--color-primary); }
-        .text-accent { color: var(--color-accent); }
-        .border-primary { border-color: var(--color-primary); }
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        /* General styling for mobile-first prototype */
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --bg-light: #f8fafc;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* Light background */
-            display: flex;
-            justify-content: center;
-            padding: 0;
-            margin: 0;
-            min-height: 100vh;
+            background-color: var(--bg-light);
+            color: #334155;
+            line-height: 1.8;
         }
 
-        /* The App Frame - constrained size for a phone look */
-        #app-frame {
-            width: 100%;
-            max-width: 420px; /* Standard mobile width */
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
-            background-color: white;
+        h1, h2, h3, h4 {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.02em;
+            color: var(--primary);
+        }
+
+        /* Interactive Terms Styling */
+        .smart-term {
+            cursor: help;
+            border-bottom: 2px dotted var(--accent);
+            color: #1e40af;
+            font-weight: 600;
+            transition: all 0.2s;
             position: relative;
-            overflow: hidden;
-            min-height: 100vh;
+            display: inline-block;
+        }
+        .smart-term:hover {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+            border-bottom-style: solid;
         }
 
-        /* Style for individual screens (hidden by default) */
-        .screen {
-            width: 100%;
-            min-height: 100vh;
+        /* Enhanced Tooltip */
+        #def-box {
+            position: fixed;
             display: none;
-            flex-direction: column; /* Ensure screens are column layouts */
-            padding-bottom: 72px; /* Space for the floating Emergency button */
-        }
-
-        /* Icon styling for the dashboard */
-        .dashboard-icon {
-            font-size: 2.5rem;
-            line-height: 1;
+            width: 450px;
+            max-width: 90vw;
+            background: rgba(15, 23, 42, 0.98);
+            color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            font-size: 0.9rem;
+            border: 1px solid #475569;
+            backdrop-filter: blur(12px);
+            pointer-events: none;
+            line-height: 1.6;
+            text-align: left;
+            animation: fadeIn 0.2s ease-out;
         }
         
-        /* Utility for the floating emergency button */
-        #emergency-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 50;
+        #def-box strong {
+            display: block;
+            color: #60a5fa;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #334155;
         }
+
+        /* Canvas & Charts */
+        .canvas-container {
+            position: relative;
+            background: #1e293b;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            height: 450px;
+        }
+
+        .formula-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            text-align: center;
+            color: #334155;
+            overflow-x: auto;
+        }
+
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn.active { background-color: var(--accent); color: white; border-color: var(--accent); }
+        .tab-btn.inactive { background-color: white; color: #64748b; border-color: #e2e8f0; }
+        .tab-btn.inactive:hover { border-color: #cbd5e1; background-color: #f8fafc; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="sm:pt-10 sm:pb-10">
+<body class="antialiased">
 
-    <div id="app-frame">
-        <!-- 
-            0. GLOBAL NAVIGATION & NOTIFICATIONS (EMERGENCY BUTTON) 
-            This button is fixed and visible across all main screens.
-        -->
-        <button id="emergency-button" class="flex items-center justify-center p-3 rounded-full shadow-lg bg-red-600 text-white hover:bg-red-700 transition duration-150 transform hover:scale-105" onclick="showMessageBox('🚨 EMERGENCY HELP\n\nContacting the nearest medical facility and sending your location data...', 'bg-red-500');">
-            <!-- Icon: Siren -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7l2 4M20 7l-2 4M10 7L8 11M4 7l2 4M12 18v3M12 3v3M5 12H2M22 12h-3M19 19l-2-2M17 7l2 2M7 7l-2 2M5 19l2-2"/></svg>
-        </button>
-
-        <!-- 
-            1. WELCOME / LOGIN / SIGNUP SCREEN 
-            (Default Screen)
-        -->
-        <div id="loginScreen" class="screen flex-col items-center justify-center p-6 text-center">
-            <h1 id="appTitle" class="text-5xl font-extrabold text-primary mb-2">Sehat Connect</h1>
-            <p id="appSubtitle" class="text-lg text-gray-500 mb-8">Digital Health for Every Village</p>
-
-            <!-- LOGO: Using the provided image -->
-            <img src="logo.png" alt="Sehat Connect Logo" class="w-40 h-40 rounded-3xl mb-12 shadow-xl border-4 border-primary/20 object-cover">
-            
-            <!-- Interface Language Selector -->
-            <div class="w-full max-w-xs space-y-4 mb-8">
-                <select id="interfaceLanguage" onchange="changeInterfaceLanguage()" class="w-full py-2 px-3 border border-gray-300 rounded-xl text-md text-gray-700 focus:ring-primary focus:border-primary shadow-sm">
-                    <option value="en">English (Interface Language)</option>
-                    <option value="hi">हिन्दी (Hindi)</option>
-                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-                </select>
-            </div>
-
-            <div class="w-full max-w-xs space-y-4">
-                <button id="loginPatientBtn" onclick="navigate('patientDashboard')" class="w-full py-4 text-xl font-semibold rounded-xl text-white bg-primary hover:bg-indigo-700 transition duration-150 shadow-lg">
-                    Login as Patient
-                </button>
-                <button id="loginDoctorBtn" onclick="navigate('doctorDashboard')" class="w-full py-4 text-xl font-semibold rounded-xl text-primary border-2 border-primary hover:bg-indigo-50 transition duration-150">
-                    Login as Doctor
-                </button>
-                <a id="signupLink" href="#" class="block pt-4 text-sm text-gray-500 hover:text-primary transition duration-150">
-                    New User? Sign Up Here
-                </a>
-            </div>
-        </div>
-
-        <!-- 
-            2. PATIENT HOME DASHBOARD 
-        -->
-        <div id="patientDashboard" class="screen pt-8 px-6">
-            <header class="mb-8">
-                <div class="flex justify-between items-center">
-                    <h2 id="helloRamu" class="text-3xl font-bold text-gray-800">Hello, Ramu!</h2>
-                    <button class="text-primary hover:text-indigo-700 p-2 rounded-full" onclick="showMessageBox('🔔 NOTIFICATIONS (2 New)\n\n- Dr. Sharma sent a follow-up reminder.\n- Medicine order #987 is out for delivery.', 'bg-primary')">
-                        <!-- Icon: Bell -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.375 22a2 2 0 1 0 3.25 0"/></svg>
-                    </button>
-                </div>
-                <p id="nextAppt" class="text-gray-500">Your next appointment: Tuesday, 10:00 AM</p>
-            </header>
-
-            <!-- Updated Grid for 6 options (3 rows, 2 columns) -->
-            <div class="grid grid-cols-2 gap-4">
-                <!-- 1. Book Appointment -->
-                <button onclick="navigate('doctorSelectionScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
-                    <span class="dashboard-icon text-primary">🗓️</span>
-                    <span id="bookAppt" class="mt-3 text-lg font-semibold text-gray-700">Book Appointment</span>
-                </button>
-
-                <!-- 2. Video Consultation -->
-                <button onclick="navigate('videoConsultationScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
-                    <span class="dashboard-icon text-accent">🎥</span>
-                    <span id="videoConsult" class="mt-3 text-lg font-semibold text-gray-700">Video Consult</span>
-                </button>
-
-                <!-- 3. Health Records -->
-                <button onclick="navigate('healthRecordsScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
-                    <span class="dashboard-icon text-primary">❤️</span>
-                    <span id="healthRecords" class="mt-3 text-lg font-semibold text-gray-700">Health Records</span>
-                </button>
-
-                <!-- 4. Medicine Delivery -->
-                <button onclick="navigate('medicineDeliveryScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
-                    <span class="dashboard-icon text-accent">💊</span>
-                    <span id="medDelivery" class="mt-3 text-lg font-semibold text-gray-700">Medicine Delivery</span>
-                </button>
-                
-                <!-- 5. NEW: Bed Availability -->
-                <button onclick="navigate('bedAvailabilityScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-primary/50 h-36">
-                    <span class="dashboard-icon text-primary">🏥</span>
-                    <span id="bedAvail" class="mt-3 text-lg font-semibold text-gray-700">Bed Availability</span>
-                </button>
-
-                <!-- 6. NEW: Medicine Stock -->
-                <button onclick="navigate('medicineAvailabilityScreen')" class="flex flex-col items-center justify-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition duration-200 border border-gray-100 hover:border-accent/50 h-36">
-                    <span class="dashboard-icon text-accent">📦</span>
-                    <span id="medStock" class="mt-3 text-lg font-semibold text-gray-700">Medicine Stock</span>
-                </button>
-            </div>
-            
-            <button id="logOutBtn" onclick="navigate('loginScreen')" class="mt-12 w-full py-3 text-sm font-medium rounded-lg text-gray-500 hover:text-red-500 transition duration-150">
-                ← Log Out
-            </button>
-        </div>
-        
-        <!-- 
-            3. DOCTOR SELECTION & APPOINTMENT BOOKING SCREEN (Availability functional)
-        -->
-        <div id="doctorSelectionScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Book Your Consultation</h2>
-            
-            <!-- Filters - Language removed, Availability functional -->
-            <div class="flex space-x-2 mb-6 text-sm">
-                <select id="specializationFilter" onchange="filterDoctors()" class="p-2 border rounded-lg bg-white shadow-sm focus:ring-primary focus:border-primary flex-grow">
-                    <option value="All">Specialization (All)</option>
-                    <option value="General Physician">General Physician</option>
-                    <option value="Pediatrician">Pediatrician</option>
-                    <option value="Dermatologist">Dermatologist</option>
-                    <option value="Cardiologist">Cardiologist</option>
-                </select>
-                <select id="availabilityFilter" onchange="filterDoctors()" class="p-2 border rounded-lg bg-white shadow-sm focus:ring-primary focus:border-primary flex-grow">
-                    <option value="All">Availability (All)</option>
-                    <option value="Today">Today</option>
-                    <option value="Tomorrow">Tomorrow</option>
-                </select>
-            </div>
-
-            <!-- Doctor List Container - Content now generated by JS on load/filter -->
-            <div id="doctorListContainer" class="space-y-4">
-                <!-- Doctor cards will be dynamically inserted here -->
-            </div>
-        </div>
-
-        <!-- 
-            4. VIDEO CONSULTATION SCREEN (Updated for working chat)
-        -->
-        <div id="videoConsultationScreen" class="screen flex-col pt-0">
-            <!-- Simulated Video Window with Vitals Placeholder -->
-            <div class="relative h-64 bg-gray-800 flex flex-col justify-between p-3 text-white">
-                <div class="flex justify-between items-start">
-                    <div class="bg-red-500 text-xs px-2 py-1 rounded">LIVE CONSULT</div>
-                    <div class="w-20 h-20 bg-gray-700 border-2 border-white rounded-lg flex items-center justify-center text-sm">
-                        Patient View
-                    </div>
-                </div>
-                <!-- Vitals Placeholder -->
-                <div class="p-2 bg-black bg-opacity-50 rounded-lg">
-                    <p class="text-xs font-semibold text-accent">Patient Vitals (Live Data):</p>
-                    <p class="text-xs">Heart Rate: 85 bpm | Temp: 98.6°F | SpO2: 97%</p>
-                </div>
-            </div>
-
-            <div class="flex-grow p-4 bg-gray-50 overflow-y-auto flex flex-col">
-                <div class="bg-white p-4 rounded-xl shadow-md mb-4 flex-grow flex flex-col">
-                    <p class="font-semibold text-gray-700 mb-2">Chat with Doctor</p>
-                    <!-- Chat Messages Area -->
-                    <div id="chatMessages" class="space-y-2 flex-grow overflow-y-auto border p-2 rounded-lg text-sm bg-gray-50 max-h-40">
-                        <div class="text-left text-xs"><span class="bg-green-100 p-2 rounded-lg inline-block">Dr. Sharma: Hello Ramu, how can I help you today?</span></div>
-                    </div>
-                    
-                    <!-- Message Input -->
-                    <div class="flex mt-3">
-                        <input id="chatInput" type="text" placeholder="Type a message..." class="flex-grow p-2 border rounded-l-lg focus:outline-none focus:ring-1 focus:ring-primary">
-                        <button onclick="sendMessage()" class="bg-primary text-white p-2 rounded-r-lg hover:bg-indigo-700 transition">Send</button>
-                    </div>
-                </div>
-
-                <!-- Call Actions -->
-                <div class="space-y-4">
-                    <button onclick="showMessageBox('📄 Prescription uploaded successfully!', 'bg-accent')" class="w-full py-3 bg-accent text-white rounded-xl font-semibold shadow-md hover:bg-emerald-600 transition">
-                        Upload Medical Report / Prescription
-                    </button>
-                    <button onclick="showMessageBox('🔄 Follow-up appointment scheduled for 3 days from now.', 'bg-primary')" class="w-full py-3 bg-indigo-100 text-primary rounded-xl font-semibold hover:bg-indigo-200 transition">
-                        Schedule Follow-up
-                    </button>
-                </div>
-            </div>
-
-            <!-- Call Controls -->
-            <div class="bg-white p-4 flex justify-around items-center border-t">
-                <button class="flex flex-col items-center text-gray-600 hover:text-primary transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V9"/><path d="M8 12h8"/></svg>
-                    <span class="text-xs mt-1">Mute</span>
-                </button>
-                <button onclick="showMessageBox('Audio Only Mode Activated - Better for low network.', 'bg-accent')" class="flex flex-col items-center text-gray-600 hover:text-accent transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0 -20z"/><path d="M10 12l4 -2l0 4z"/></svg>
-                    <span class="text-xs mt-1 font-semibold">Audio Only</span>
-                </button>
-                <button onclick="navigate('patientDashboard')" class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-red-600 transition transform hover:scale-105">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l-2 2h-4a2 2 0 0 0 -2 2v16a2 2 0 0 0 2 2h16a2 2 0 0 0 2 -2v-16a2 2 0 0 0 -2 -2h-4l-2 -2z"/></svg>
-                </button>
-                <button class="flex flex-col items-center text-gray-600 hover:text-primary transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 2.8c-2.43 0 -5.5 1.7 -5.5 5.5v7.2c0 3.8 3.07 5.5 5.5 5.5c2.43 0 5.5 -1.7 5.5 -5.5v-7.2c0 -3.8 -3.07 -5.5 -5.5 -5.5z"/><path d="M9 12h-4"/></svg>
-                    <span class="text-xs mt-1">Camera</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- 
-            5. MEDICINE DELIVERY SCREEN 
-        -->
-        <div id="medicineDeliveryScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Medicine Delivery</h2>
-            
-            <!-- Tracking Card -->
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-6 border-l-4 border-accent">
-                <p class="font-bold text-lg text-accent mb-2">Order #987</p>
-                <p class="text-2xl font-extrabold text-gray-800">Out for Delivery</p>
-                <p class="text-sm text-gray-500 mb-4">Estimated arrival: Today by 6:00 PM</p>
-                
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-primary font-semibold">Ordered</span>
-                    <span class="text-accent font-semibold">Packed</span>
-                    <span class="font-extrabold text-accent">Out for Delivery</span>
-                    <span class="text-gray-400">Delivered</span>
-                </div>
-                <div class="h-2 bg-gray-200 rounded-full mt-1">
-                    <div class="h-2 bg-accent rounded-full" style="width: 75%;"></div>
-                </div>
-            </div>
-
-            <h3 class="text-xl font-semibold text-gray-700 mb-4">New Order</h3>
-            <div class="p-4 bg-white rounded-xl shadow-md space-y-3">
-                <p class="text-sm text-gray-600">Upload Doctor's Prescription or select from history.</p>
-                <button class="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-indigo-700 transition" onclick="showMessageBox('Uploading prescription...\n\nOrder placed successfully!', 'bg-primary')">
-                    Upload Prescription & Order
-                </button>
-            </div>
-        </div>
-
-        <!-- 
-            6. HEALTH RECORDS SCREEN 
-        -->
-        <div id="healthRecordsScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">My Health Records</h2>
-            
-            <div class="space-y-4">
-                <!-- Record 1 -->
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-primary">
-                    <p class="font-semibold text-lg text-primary">Prescription - Fever (June 2024)</p>
-                    <p class="text-sm text-gray-600">Dr. S. K. Singh</p>
-                    <button class="mt-2 text-xs text-accent hover:underline">Download/View</button>
-                </div>
-                
-                <!-- Record 2 -->
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
-                    <p class="font-semibold text-lg text-accent">Lab Report - Blood Test (May 2024)</p>
-                    <p class="text-sm text-gray-600">Village Diagnostic Center</p>
-                    <button class="mt-2 text-xs text-primary hover:underline">Download/View</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 
-            7. NEW: DOCTOR DASHBOARD (Placeholder)
-        -->
-        <div id="doctorDashboard" class="screen pt-8 px-6">
-            <button onclick="navigate('loginScreen')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Log Out</span>
-            </button>
-            <header class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Welcome, Dr. Sharma!</h2>
-                <p class="text-gray-500">Your Consultations Dashboard</p>
-            </header>
-
-            <div class="grid grid-cols-1 gap-4">
-                <div class="p-5 bg-primary text-white rounded-xl shadow-lg">
-                    <p class="text-4xl font-extrabold">3</p>
-                    <p class="text-sm mt-1">Pending Appointments Today</p>
-                </div>
-                <div class="p-4 bg-white rounded-xl shadow-md border border-accent/20">
-                    <p class="font-semibold text-lg text-accent">Next Consult: Ramu S.</p>
-                    <p class="text-sm text-gray-600">Time: 10:00 AM | Language: Hindi</p>
-                    <button onclick="navigate('videoConsultationScreen')" class="mt-3 bg-accent text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-emerald-600 transition">
-                        Start Consult
-                    </button>
-                </div>
-                <!-- UPDATED BUTTON to navigate to the new records screen -->
-                <button onclick="navigate('patientRecordsManagementScreen')" class="w-full py-3 bg-indigo-100 text-primary rounded-xl font-semibold hover:bg-indigo-200 transition">
-                    View All Patient Records
-                </button>
-            </div>
-            
-            <button onclick="navigate('loginScreen')" class="mt-12 w-full py-3 text-sm font-medium rounded-lg text-gray-500 hover:text-red-500 transition duration-150">
-                ← Log Out
-            </button>
-        </div>
-        
-        <!-- 
-            8. NEW: BED AVAILABILITY SCREEN (Placeholder)
-        -->
-        <div id="bedAvailabilityScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Live Bed Availability</h2>
-            
-            <div class="space-y-4">
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
-                    <p class="font-semibold text-lg text-accent">District Hospital, [City Name]</p>
-                    <p class="text-sm text-gray-600">General Beds Available: <span class="font-bold text-green-600">12</span></p>
-                    <p class="text-sm text-gray-600">ICU Beds Available: <span class="font-bold text-yellow-600">2</span></p>
-                </div>
-                
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-red-500">
-                    <p class="font-semibold text-lg text-primary">Rural Health Center, [Village A]</p>
-                    <p class="text-sm text-gray-600">General Beds Available: <span class="font-bold text-red-600">0</span></p>
-                    <p class="text-sm text-gray-600">Last Updated: 5 minutes ago</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 
-            9. NEW: MEDICINE AVAILABILITY SCREEN (Placeholder)
-        -->
-        <div id="medicineAvailabilityScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('patientDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Medicine Stock Check</h2>
-            
-            <div class="space-y-4">
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent">
-                    <p class="font-semibold text-lg text-accent">Paracetamol 500mg</p>
-                    <p class="text-sm text-gray-600">Local Pharmacy (Village Center): <span class="font-bold text-green-600">In Stock (100+ units)</span></p>
-                </div>
-                
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-red-500">
-                    <p class="font-semibold text-lg text-primary">Amoxicillin 250mg</p>
-                    <p class="text-sm text-gray-600">Local Pharmacy (Village Center): <span class="font-bold text-red-600">Low Stock (5 units)</span></p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 
-            10. NEW: PATIENT RECORDS MANAGEMENT SCREEN (For Doctors)
-        -->
-        <div id="patientRecordsManagementScreen" class="screen pt-8 px-6">
-            <button onclick="navigate('doctorDashboard')" class="text-primary hover:text-indigo-700 mb-4 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                <span class="ml-1">Back to Dashboard</span>
-            </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Patient Records Management</h2>
-            
-            <!-- Search and Filter -->
-            <div class="mb-4">
-                <input type="text" placeholder="Search by Patient Name or ID..." class="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-primary focus:border-primary">
-            </div>
-
-            <!-- Patient List -->
-            <div class="space-y-3 overflow-y-auto flex-grow">
-                <!-- Patient Record 1 -->
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold text-lg text-accent">Ramu Singh (ID: 4501)</p>
-                        <p class="text-sm text-gray-600">Last Visit: Today, 10:00 AM</p>
-                        <p class="text-xs text-red-500 font-medium">Flag: High BP History</p>
-                    </div>
-                    <button onclick="showMessageBox('Viewing detailed record for Ramu Singh...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
-                        View/Edit
-                    </button>
-                </div>
-
-                <!-- Patient Record 2 -->
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-primary flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold text-lg text-primary">Priya Das (ID: 1022)</p>
-                        <p class="text-sm text-gray-600">Last Visit: 2 weeks ago</p>
-                        <p class="text-xs text-gray-400">Flag: None</p>
-                    </div>
-                    <button onclick="showMessageBox('Viewing detailed record for Priya Das...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
-                        View/Edit
-                    </button>
-                </div>
-                
-                <!-- Patient Record 3 -->
-                <div class="p-4 bg-white rounded-xl shadow-md border-l-4 border-accent flex justify-between items-center">
-                    <div>
-                        <p class="font-semibold text-lg text-accent">Kishan Lal (ID: 7891)</p>
-                        <p class="text-sm text-gray-600">Last Visit: 1 month ago</p>
-                        <p class="text-xs text-gray-400">Flag: None</p>
-                    </div>
-                    <button onclick="showMessageBox('Viewing detailed record for Kishan Lal...', 'bg-accent')" class="bg-primary text-white py-2 px-4 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
-                        View/Edit
-                    </button>
-                </div>
-                
-            </div>
-        </div>
-        
-        <!-- Custom Alert/Message Box (No use of alert()) -->
-        <div id="messageBox" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
-            <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm transform transition-all duration-300 scale-100">
-                <div id="messageBoxIcon" class="text-4xl text-center mb-4"></div>
-                <div id="messageBoxText" class="text-center text-gray-700 whitespace-pre-line font-medium"></div>
-                <button onclick="hideMessageBox()" class="mt-6 w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-indigo-700 transition">
-                    Close
-                </button>
-            </div>
-        </div>
-
+    <!-- Definitions Tooltip -->
+    <div id="def-box">
+        <strong id="def-title"></strong>
+        <div id="def-content"></div>
     </div>
 
-    <script>
-        // --- GLOBAL TRANSLATION DATA AND STATE ---
-        let currentLanguage = 'en'; // Global state for selected language
-
-        const translations = {
-            'en': {
-                'appTitle': 'Sehat Connect',
-                'appSubtitle': 'Digital Health for Every Village',
-                'interfaceSelector': 'English (Interface Language)',
-                'loginPatient': 'Login as Patient',
-                'loginDoctor': 'Login as Doctor',
-                'signupLink': 'New User? Sign Up Here',
-                'hello': 'Hello, Ramu!',
-                'nextAppt': 'Your next appointment: Tuesday, 10:00 AM',
-                'bookAppt': 'Book Appointment',
-                'videoConsult': 'Video Consult',
-                'healthRecords': 'Health Records',
-                'medDelivery': 'Medicine Delivery',
-                'bedAvail': 'Bed Availability',
-                'medStock': 'Medicine Stock',
-                'logOut': '← Log Out'
-            },
-            'hi': {
-                'appTitle': 'सेहत कनेक्ट',
-                'appSubtitle': 'हर गाँव के लिए डिजिटल स्वास्थ्य',
-                'interfaceSelector': 'हिन्दी (Hindi)',
-                'loginPatient': 'रोगी के रूप में लॉगिन करें',
-                'loginDoctor': 'डॉक्टर के रूप में लॉगिन करें',
-                'signupLink': 'नया उपयोगकर्ता? यहाँ साइन अप करें',
-                'hello': 'नमस्ते, रामू!',
-                'nextAppt': 'आपका अगला अपॉइंटमेंट: मंगलवार, सुबह 10:00 बजे',
-                'bookAppt': 'अपॉइंटमेंट बुक करें',
-                'videoConsult': 'वीडियो परामर्श',
-                'healthRecords': 'स्वास्थ्य रिकॉर्ड',
-                'medDelivery': 'दवा वितरण',
-                'bedAvail': 'बेड की उपलब्धता',
-                'medStock': 'दवा स्टॉक',
-                'logOut': '← लॉग आउट करें'
-            },
-            'pa': {
-                'appTitle': 'ਸਿਹਤ ਕਨੈਕਟ',
-                'appSubtitle': 'ਹਰ ਪਿੰਡ ਲਈ ਡਿਜੀਟਲ ਸਿਹਤ',
-                'interfaceSelector': 'ਪੰਜਾਬੀ (Punjabi)',
-                'loginPatient': 'ਮਰੀਜ਼ ਵਜੋਂ ਲੌਗਇਨ ਕਰੋ',
-                'loginDoctor': 'ਡਾਕਟਰ ਵਜੋਂ ਲੌਗਇਨ ਕਰੋ',
-                'signupLink': 'ਨਵਾਂ ਯੂਜ਼ਰ? ਇੱਥੇ ਸਾਈਨ ਅੱਪ ਕਰੋ',
-                'hello': 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਰਾਮੂ!',
-                'nextAppt': 'ਤੁਹਾਡੀ ਅਗਲੀ ਮੁਲਾਕਾਤ: ਮੰਗਲਵਾਰ, ਸਵੇਰੇ 10:00 ਵਜੇ',
-                'bookAppt': 'ਅਪੌਇੰਟਮੈਂਟ ਬੁੱਕ ਕਰੋ',
-                'videoConsult': 'ਵੀਡੀਓ ਸਲਾਹ',
-                'healthRecords': 'ਸਿਹਤ ਰਿਕਾਰਡ',
-                'medDelivery': 'ਦਵਾਈ ਡਿਲੀਵਰੀ',
-                'bedAvail': 'ਬੈੱਡ ਦੀ ਉਪਲਬਧਤਾ',
-                'medStock': 'ਦਵਾਈ ਦਾ ਸਟਾਕ',
-                'logOut': '← ਲੌਗ ਆਉਟ'
-            }
-        };
-
-        /**
-         * Applies the selected language translations to the visible screen elements.
-         * @param {string} lang - The language code ('en', 'hi', 'pa').
-         */
-        function applyTranslations(lang) {
-            const t = translations[lang] || translations['en']; // Fallback
-            currentLanguage = lang;
-
-            // 1. LOGIN SCREEN ELEMENTS
-            if (screens.loginScreen) {
-                document.getElementById('appTitle').innerText = t.appTitle;
-                document.getElementById('appSubtitle').innerText = t.appSubtitle;
-                document.getElementById('loginPatientBtn').innerText = t.loginPatient;
-                document.getElementById('loginDoctorBtn').innerText = t.loginDoctor;
-                document.getElementById('signupLink').innerText = t.signupLink;
-            }
-
-            // 2. PATIENT DASHBOARD ELEMENTS
-            if (screens.patientDashboard) {
-                document.getElementById('helloRamu').innerText = t.hello;
-                document.getElementById('nextAppt').innerText = t.nextAppt;
-                
-                document.getElementById('bookAppt').innerText = t.bookAppt;
-                document.getElementById('videoConsult').innerText = t.videoConsult;
-                document.getElementById('healthRecords').innerText = t.healthRecords;
-                document.getElementById('medDelivery').innerText = t.medDelivery;
-                document.getElementById('bedAvail').innerText = t.bedAvail;
-                document.getElementById('medStock').innerText = t.medStock;
-                
-                document.getElementById('logOutBtn').innerText = t.logOut;
-            }
-        }
-
-        /**
-         * Triggered when the language dropdown changes. Sets the global language and updates the interface.
-         */
-        function changeInterfaceLanguage() {
-            const lang = document.getElementById('interfaceLanguage').value;
-            
-            // 1. Apply translations to ALL relevant screen elements, regardless of visibility
-            applyTranslations(lang); 
-
-            // 2. Show confirmation message
-            let message = '';
-            if (lang === 'en') {
-                message = 'Interface language successfully changed to English.';
-            } else if (lang === 'hi') {
-                message = 'इंटरफ़ेस भाषा सफलतापूर्वक हिन्दी पर बदल दी गई है।\n(Interface language successfully changed to Hindi.)';
-            } else if (lang === 'pa') {
-                message = 'ਇੰਟਰਫੇਸ ਭਾਸ਼ਾ ਸਫਲਤਾਪੂਰਵਕ ਪੰਜਾਬੀ ਤੇ ਬਦਲ ਦਿੱਤੀ ਗਈ ਹੈ।\n(Interface language successfully changed to Punjabi.)';
-            }
-            showMessageBox(message, 'bg-accent');
-        }
-
-
-        // --- DOCTOR DATA & FILTERING LOGIC ---
-
-        const initialDoctors = [
-            // Added explicit 'availableToday' boolean for filtering
-            { id: 1, name: "Dr. Priya Sharma", spec: "General Physician", lang: "Hindi", availTime: "Available Today: 3:00 PM", availableToday: true, status: "Available" },
-            { id: 2, name: "Dr. Amit Patel", spec: "Pediatrician", lang: "Gujarati", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Booked" },
-            { id: 3, name: "Dr. John D'Souza", spec: "Dermatologist", lang: "English, Punjabi", availTime: "Available Today: 5:30 PM", availableToday: true, status: "Available" },
-            { id: 4, name: "Dr. Kavita Singh", spec: "General Physician", lang: "Punjabi", availTime: "Available Today: 4:00 PM", availableToday: true, status: "Available" },
-            { id: 5, name: "Dr. Zubin Mehta", spec: "Cardiologist", lang: "English", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Available" },
-            { id: 6, name: "Dr. Rani Kumari", spec: "General Physician", lang: "Hindi", availTime: "Available Today: 1:00 PM", availableToday: true, status: "Available" },
-            { id: 7, name: "Dr. Harsh Verma", spec: "Pediatrician", lang: "Marathi", availTime: "Next Slot: Tomorrow", availableToday: false, status: "Available" },
-            { id: 8, name: "Dr. Soniya Rao", spec: "Dermatologist", lang: "Hindi", availTime: "Available Today: 6:00 PM", availableToday: true, status: "Available" },
-        ];
-
-        /**
-         * Renders the doctor list based on the provided array.
-         * @param {Array<Object>} doctors - Array of doctor objects.
-         */
-        function renderDoctors(doctors) {
-            const container = document.getElementById('doctorListContainer');
-            if (!container) return;
-
-            if (doctors.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-gray-500 rounded-xl bg-gray-50">No doctors found matching your criteria.</div>`;
-                return;
-            }
-
-            container.innerHTML = doctors.map(doctor => {
-                const isAvailable = doctor.status === "Available";
-                const bgColor = isAvailable ? 'border-primary/10' : 'border-gray-200';
-                const statusColor = isAvailable ? 'text-accent font-semibold' : 'text-gray-400';
-                const buttonClass = isAvailable ? 'bg-accent text-white hover:bg-emerald-600' : 'bg-gray-200 text-gray-500 cursor-not-allowed';
-                const buttonText = isAvailable ? 'Book Slot' : 'Fully Booked';
-                
-                return `
-                    <div class="p-4 bg-white rounded-xl shadow-md border ${bgColor} flex justify-between items-center">
-                        <div>
-                            <p class="font-semibold text-lg text-primary">${doctor.name}</p>
-                            <p class="text-sm text-gray-600">${doctor.spec} | Speaks ${doctor.lang}</p>
-                            <p class="text-xs ${statusColor}">${doctor.availTime}</p>
-                        </div>
-                        <button onclick="${isAvailable ? "navigate('videoConsultationScreen')" : "void(0)"}" 
-                                class="${buttonClass} py-2 px-4 rounded-lg text-sm font-semibold transition">
-                            ${buttonText}
-                        </button>
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
+                        <i class="fa-solid fa-atom text-xl"></i>
                     </div>
-                `;
-            }).join('');
-        }
+                    <div class="leading-none">
+                        <span class="block font-bold text-slate-900 text-lg">Crysta<span class="text-blue-600">Sim</span></span>
+                        <span class="text-xs text-slate-500 font-medium">CFD-PBE Research</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex space-x-1 text-sm font-bold text-slate-600">
+                    <a href="#intro" class="px-4 py-2 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">Introduction</a>
+                    <a href="#theory" class="px-4 py-2 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">Theory</a>
+                    <a href="#math" class="px-4 py-2 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">Models</a>
+                    <a href="#simulation" class="px-4 py-2 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">Virtual Lab</a>
+                    <a href="#results" class="px-4 py-2 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition">Results</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        /**
-         * Filters the rendered doctor list based on selected dropdown values.
-         */
-        function filterDoctors() {
-            const specFilter = document.getElementById('specializationFilter').value;
-            const availFilter = document.getElementById('availabilityFilter').value;
+    <main>
+        <!-- Hero Section -->
+        <header id="intro" class="relative py-24 bg-gradient-to-b from-slate-50 to-white border-b border-slate-200 overflow-hidden">
+            <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-widest mb-8 border border-blue-200">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    Interactive Research Visualization
+                </div>
+                <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 mb-8 leading-tight tracking-tight">
+                    <span class="smart-term" data-term="CFD">CFD</span>-<span class="smart-term" data-term="PBE">PBE</span> Modeling of <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Continuous Antisolvent Crystallization</span>
+                </h1>
+                <p class="text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+                    A comprehensive study on <span class="smart-term" data-term="Impinging Jet">Impinging Jet Crystallizers</span>. 
+                    Visualizing fluid dynamics, mixing regimes, and the impact of <span class="smart-term" data-term="Multi-stage Injection">Multi-stage Injection</span> on <span class="smart-term" data-term="API">API</span> quality.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#simulation" class="group inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition shadow-xl shadow-blue-600/20">
+                        <i class="fa-solid fa-flask mr-2"></i> Launch Virtual Lab
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Theory Section -->
+        <section id="theory" class="py-24 bg-white border-b border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid lg:grid-cols-2 gap-16">
+                    
+                    <!-- Left: Text -->
+                    <div class="space-y-12">
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">1</span>
+                                <h2 class="text-3xl font-bold text-slate-900">Crystallization Fundamentals</h2>
+                            </div>
+                            <div class="prose prose-lg text-slate-600">
+                                <p>
+                                    Crystallization is the primary method for isolating solid <span class="smart-term" data-term="API">API</span>s in the <span class="smart-term" data-term="pharmaceutical">pharmaceutical</span> industry. It is generally categorized into three types:
+                                </p>
+                                <ul class="list-none space-y-4 my-6">
+                                    <li class="bg-slate-50 p-4 rounded-lg border-l-4 border-orange-400">
+                                        <strong class="text-slate-900 block mb-1">Evaporative Crystallization</strong>
+                                        Solvent is removed by heat. High energy cost and risky for <span class="smart-term" data-term="Thermally Sensitive">thermally sensitive</span> drugs.
+                                    </li>
+                                    <li class="bg-slate-50 p-4 rounded-lg border-l-4 border-cyan-400">
+                                        <strong class="text-slate-900 block mb-1">Cooling Crystallization</strong>
+                                        Temperature is lowered to reduce solubility. Limited by the solubility curve.
+                                    </li>
+                                    <li class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
+                                        <strong class="text-blue-900 block mb-1"><span class="smart-term" data-term="Antisolvent">Antisolvent</span> (This Study)</strong>
+                                        Adding a second liquid to force precipitation. Operates at constant temperature, ideal for delicate compounds like Paracetamol.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl font-bold">2</span>
+                                <h2 class="text-3xl font-bold text-slate-900">Mixing Physics</h2>
+                            </div>
+                            <div class="prose prose-lg text-slate-600">
+                                <p>
+                                    Product quality depends heavily on <span class="smart-term" data-term="Mixing Efficiency">Mixing Efficiency</span>. 
+                                    The flow <span class="smart-term" data-term="Regime">Regime</span> is determined by the velocity ratio (<i>r</i>).
+                                </p>
+                                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                                    <div class="p-5 rounded-xl border border-slate-200 bg-white">
+                                        <h4 class="font-bold text-slate-900 mb-2"><span class="smart-term" data-term="Stratified flow">Stratified flow</span> (<i>r</i> < 2)</h4>
+                                        <p class="text-sm">
+                                            Jets don't penetrate. <span class="smart-term" data-term="Mixing Time">Mixing Time</span> is high (>0.3s). Leads to poor <span class="smart-term" data-term="Crystal Size Distribution">Crystal Size Distribution</span>.
+                                        </p>
+                                    </div>
+                                    <div class="p-5 rounded-xl border border-blue-200 bg-blue-50">
+                                        <h4 class="font-bold text-blue-900 mb-2"><span class="smart-term" data-term="Turbulent impingement">Turbulent impingement</span> (<i>r</i> ≈ 4)</h4>
+                                        <p class="text-sm text-blue-800">
+                                            Jets collide at the center. Kinetic energy dissipates into turbulence. Micromixing is instantaneous (0.04s).
+                                        </p>
+                                    </div>
+                                    <div class="p-5 rounded-xl border border-orange-200 bg-orange-50 col-span-2">
+                                        <h4 class="font-bold text-orange-900 mb-2"><span class="smart-term" data-term="back-splash">Back-splash</span> (<i>r</i> ≥ 6)</h4>
+                                        <p class="text-sm text-orange-800">
+                                            Excessive jet momentum forces fluid upstream against the cross-flow. Creates unstable recirculation zones.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Visuals -->
+                    <div class="space-y-8">
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm h-full flex flex-col justify-center">
+                            <h3 class="font-bold text-slate-900 mb-4 text-center">Experimental Schematic (Figure 3)</h3>
+                            <div class="flex-grow flex items-center justify-center bg-white rounded-xl border border-slate-100 p-4">
+                                <canvas id="schematicCanvas" class="w-full h-[400px]"></canvas>
+                            </div>
+                            <p class="text-xs text-center text-slate-500 mt-4 italic">
+                                Diagram: Solution (1) and Antisolvent (2) feed tanks, Pumps (3), and the Impinging Jet Crystallizer (4).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Math Section -->
+        <section id="math" class="py-20 bg-slate-50 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-slate-900 mb-10 text-center">Mathematical Framework</h2>
+
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <!-- CFD Column -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-wind text-blue-600"></i> Fluid Dynamics (CFD)</h3>
+                        <p class="text-slate-600 mb-4 text-sm">
+                            Modeled using the <span class="smart-term" data-term="Eulerian-Eulerian">Eulerian-Eulerian</span> approach. The liquid and crystal phases are treated as <span class="smart-term" data-term="interpenetrating fluids">interpenetrating fluids</span>.
+                        </p>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Momentum Conservation Equation</p>
+                            <div class="formula-box mb-4">
+                                <span class="smart-term" data-term="Accumulation">∂(αρU)/∂t</span> + 
+                                <span class="smart-term" data-term="Convection">∇·(αρUU)</span> = 
+                                -<span class="smart-term" data-term="Pressure Gradient">α∇p</span> + 
+                                <span class="smart-term" data-term="Viscous Stress">∇·τ</span> + 
+                                <span class="smart-term" data-term="Wen-Yu Drag">K(Uc-Ul)</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                This equation predicts velocity by balancing inertia, pressure, and stress forces.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PBE Column -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-line text-teal-600"></i> Population Balance (PBE)</h3>
+                        <p class="text-slate-600 mb-4 text-sm">
+                            Tracks the <span class="smart-term" data-term="Crystal Size Distribution">Crystal Size Distribution</span>. Solved with a <span class="smart-term" data-term="Minmod Limiter">Minmod Limiter</span> to ensure stability.
+                        </p>
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">PBE Equation</p>
+                            <div class="formula-box mb-4">
+                                <span class="smart-term" data-term="Accumulation">∂n/∂t</span> + 
+                                <span class="smart-term" data-term="Convection">∇·(Un)</span> + 
+                                <span class="smart-term" data-term="Growth Term">∂(Gn)/∂L</span> = 
+                                <span class="smart-term" data-term="NUCLEATION RATE (B)">B</span> - 
+                                <span class="smart-term" data-term="Death">D</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                Describes how particle count (<i>n</i>) changes due to flow, growth (<i>G</i>), and birth (<i>B</i>).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kinetics -->
+                <div class="mt-12 bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-900 mb-6 border-b pb-2">Paracetamol Kinetics (Experimental Data)</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">Nucleation Rate (B)</p>
+                            <div class="formula-box text-lg"><span class="smart-term" data-term="NUCLEATION RATE (B)">B</span> = 4.355 × (ΔC)<sup>1.85</sup></div>
+                            <p class="text-sm text-slate-600 mt-2">Highly sensitive to <span class="smart-term" data-term="Supersaturation">Supersaturation</span>. Small increases cause <span class="smart-term" data-term="Explosive Nucleation">Explosive Nucleation</span> of fines.</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-teal-600 uppercase tracking-wider mb-2">Growth Rate (G)</p>
+                            <div class="formula-box text-lg"><span class="smart-term" data-term="GROWTH RATE (G)">G</span> = 1.28e-5 × (ΔC)<sup>1.95</sup></div>
+                            <p class="text-sm text-slate-600 mt-2">Also driven by ΔC. The goal is to maximize G while controlling B.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simulation -->
+        <section id="simulation" class="py-24 bg-slate-900 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
             
-            const filteredDoctors = initialDoctors.filter(doctor => {
-                const specMatch = specFilter === 'All' || doctor.spec === specFilter;
-                
-                let availMatch = true;
-                if (availFilter === 'Today') {
-                    availMatch = doctor.availableToday;
-                } else if (availFilter === 'Tomorrow') {
-                    availMatch = !doctor.availableToday;
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="mb-10 flex flex-col md:flex-row justify-between items-end border-b border-slate-700 pb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">Virtual Impinging Jet Reactor</h2>
+                        <p class="text-slate-400">Configure feed stages (<i>n</i>) and velocity (<i>r</i>) to optimize flow.</p>
+                    </div>
+                    
+                    <div class="flex gap-8 mt-6 md:mt-0 bg-slate-800 p-4 rounded-xl border border-slate-600 shadow-xl">
+                        <!-- R Selector -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Velocity Ratio (r)</label>
+                            <div class="flex gap-2">
+                                <label class="cursor-pointer"><input type="radio" name="rVal" value="1" class="peer sr-only" onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-red-600 peer-checked:text-white font-bold transition">1</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="rVal" value="4" class="peer sr-only" checked onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-green-600 peer-checked:text-white font-bold transition">4</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="rVal" value="6" class="peer sr-only" onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-orange-600 peer-checked:text-white font-bold transition">6</div></label>
+                            </div>
+                        </div>
+                        <div class="w-px bg-slate-600"></div>
+                        <!-- N Selector -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Feed Stages (n)</label>
+                            <div class="flex gap-2">
+                                <label class="cursor-pointer"><input type="radio" name="nVal" value="1" class="peer sr-only" onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-blue-600 peer-checked:text-white font-bold transition">1</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="nVal" value="2" class="peer sr-only" onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-blue-600 peer-checked:text-white font-bold transition">2</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="nVal" value="3" class="peer sr-only" checked onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-blue-600 peer-checked:text-white font-bold transition">3</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="nVal" value="4" class="peer sr-only" onchange="updateSim()"><div class="w-10 h-10 rounded flex items-center justify-center bg-slate-700 text-slate-300 peer-checked:bg-blue-600 peer-checked:text-white font-bold transition">4</div></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Canvas -->
+                    <div class="lg:col-span-2">
+                        <div class="canvas-container h-[500px]">
+                            <canvas id="simCanvas"></canvas>
+                            <div class="absolute bottom-4 left-4 flex gap-4 bg-slate-900/90 p-3 rounded-lg border border-slate-700 text-xs font-mono">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-slate-400"></span> Solvent</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-teal-400"></span> Antisolvent</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Data -->
+                    <div class="space-y-6">
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Analysis</h3>
+                            <div class="mb-5"><div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-300"><span class="smart-term" data-term="Regime">Regime</span></span><span id="stat-regime" class="font-mono font-bold text-green-400 text-sm">Turbulent</span></div><div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden"><div id="bar-regime" class="h-full bg-green-500 w-full transition-all duration-700"></div></div></div>
+                            <div class="mb-5"><div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-300"><span class="smart-term" data-term="Mixing Time">Mixing Time</span></span><span id="stat-time" class="font-mono font-bold text-white text-sm">0.04s</span></div><div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden"><div id="bar-time" class="h-full bg-blue-500 w-[95%] transition-all duration-700"></div></div></div>
+                            <div><div class="flex justify-between items-center mb-2"><span class="text-sm text-slate-300"><span class="smart-term" data-term="Mean Size">Mean Size</span></span><span id="stat-size" class="font-mono font-bold text-teal-400 text-sm">31 µm</span></div><div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden"><div id="bar-size" class="h-full bg-teal-500 w-[90%] transition-all duration-700"></div></div></div>
+                        </div>
+                        <div class="bg-blue-900/20 p-5 rounded-2xl border border-blue-800/50">
+                            <h4 class="text-blue-400 font-bold text-sm mb-2"><i class="fa-solid fa-lightbulb mr-2"></i>Physics Insight</h4>
+                            <p id="sim-desc" class="text-sm text-blue-200/90 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results -->
+        <section id="results" class="py-24 bg-slate-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Results & Discussion</h2>
+                    <p class="text-lg text-slate-600">Detailed data analysis.</p>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4 mb-10">
+                    <button onclick="switchTab('validation')" id="tab-validation" class="tab-btn active px-6 py-2 rounded-full font-bold text-sm border shadow-sm">Validation</button>
+                    <button onclick="switchTab('grid')" id="tab-grid" class="tab-btn inactive px-6 py-2 rounded-full font-bold text-sm border shadow-sm">Grid Independence</button>
+                    <button onclick="switchTab('hydro')" id="tab-hydro" class="tab-btn inactive px-6 py-2 rounded-full font-bold text-sm border shadow-sm">Hydrodynamics</button>
+                    <button onclick="switchTab('staging')" id="tab-staging" class="tab-btn inactive px-6 py-2 rounded-full font-bold text-sm border shadow-sm">Multi-Staging</button>
+                </div>
+
+                <div id="content-validation" class="grid lg:grid-cols-2 gap-12 items-center tab-content">
+                    <div class="chart-card"><canvas id="chartCSD"></canvas></div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Model Validation</h3>
+                        <p class="text-slate-600">Experimental data (Red) vs Simulation (Blue) for <i>r</i> = 4.</p>
+                        <p class="mt-4 text-sm text-slate-500">The overlap confirms the accuracy of the CFD-PBE coupling.</p>
+                    </div>
+                </div>
+
+                <div id="content-grid" class="hidden grid lg:grid-cols-2 gap-12 items-center tab-content">
+                    <div class="chart-card"><canvas id="chartGrid"></canvas></div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-4">Grid Independence</h3>
+                        <p class="text-slate-600">Fluid flow converged at 900k cells, but scalar transport required 1.18M cells.</p>
+                    </div>
+                </div>
+
+                <div id="content-hydro" class="hidden grid lg:grid-cols-2 gap-12 items-center tab-content">
+                    <div class="chart-card"><canvas id="chartMixing"></canvas></div>
+                    <div class="space-y-4">
+                        <h3 class="text-2xl font-bold text-slate-900">Velocity Ratio (<i>r</i>)</h3>
+                        <div class="p-4 bg-slate-100 rounded-lg border-l-4 border-slate-400">
+                            <strong class="block text-slate-900"><i>r</i> = 1 (Stratified)</strong>
+                            <span class="text-sm text-slate-700">Low jet momentum (<i>Re<sub>j</sub></i> ≈ 6.7k). Jets fail to penetrate the cross-flow and are swept downstream near the walls. Mixing is diffusion-limited and slow (&gt; 0.3s), causing high local supersaturation and poor crystal quality.</span>
+                        </div>
+                        <div class="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                            <strong class="block text-yellow-900"><i>r</i> = 2 (Transition)</strong>
+                            <span class="text-sm text-yellow-800">Jets begin to penetrate but don't fully impinge. Mixing improves (0.2s) but lacks the intense turbulent energy dissipation needed for rapid micromixing.</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-500">
+                            <strong class="block text-emerald-900"><i>r</i> = 4 (Optimal)</strong>
+                            <span class="text-sm text-emerald-800">Jets penetrate to the center and collide. Kinetic energy converts to isotropic turbulence. Mixing time drops to <strong>0.04s</strong>, creating a uniform supersaturation field.</span>
+                        </div>
+                        <div class="p-4 bg-orange-50 rounded-lg border-l-4 border-orange-400">
+                            <strong class="block text-orange-900"><i>r</i> = 6 (Back-splash)</strong>
+                            <span class="text-sm text-orange-800">Excessive momentum (<i>Re<sub>j</sub></i> &gt; 16k) forces fluid upstream against the main flow. This creates large recirculation zones that trap crystals, broadening the size distribution.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-staging" class="hidden grid lg:grid-cols-2 gap-12 items-center tab-content">
+                    <div class="chart-card"><canvas id="chartStaging"></canvas></div>
+                    <div class="space-y-4">
+                        <h3 class="text-2xl font-bold text-slate-900"><span class="smart-term" data-term="Multi-stage Injection">Multi-Staging</span> (<i>n</i>)</h3>
+                        <!-- EXPANDED DESCRIPTIONS -->
+                        <div class="p-4 bg-slate-100 rounded-lg border-l-4 border-slate-400">
+                            <strong class="block text-slate-900"><i>n</i> = 1 (18 µm)</strong>
+                            <span class="text-sm text-slate-700">Single injection creates a massive supersaturation spike. This triggers explosive nucleation, consuming solute rapidly and generating excessive fines (18 µm). Mixing is good, but the chemistry is uncontrolled. <span class="smart-term" data-term="Nucleation spike">Learn more</span>.</span>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                            <strong class="block text-blue-900"><i>n</i> = 2 (22 µm)</strong>
+                            <span class="text-sm text-blue-800">Moderate improvement (22 µm). Crystals formed in the first stage act as seeds for the second stage. This <span class="smart-term" data-term="Seeding Effect">Seeding Effect</span> consumes supersaturation via growth, suppressing some secondary nucleation.</span>
+                        </div>
+                        <div class="p-4 bg-emerald-50 rounded-lg border-l-4 border-emerald-500">
+                            <strong class="block text-emerald-900"><i>n</i> = 3 (31 µm)</strong>
+                            <span class="text-sm text-emerald-800">Optimal configuration (31 µm). Staged addition maintains supersaturation in the metastable zone. The process becomes <span class="smart-term" data-term="Growth dominated">Growth dominated</span>, allowing existing crystals to grow large without forming new fines.</span>
+                        </div>
+                        <div class="p-4 bg-orange-50 rounded-lg border-l-4 border-orange-400">
+                            <strong class="block text-slate-900"><i>n</i> = 4 (25 µm)</strong>
+                            <span class="text-sm text-slate-700">Performance degrades (25 µm). Dividing the flow into 4 stages reduces the exit velocity at each nozzle. This leads to <span class="smart-term" data-term="Low jet momentum">Low jet momentum</span>, causing poor mixing penetration and uneven growth.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="bg-slate-900 text-slate-400 py-16 text-center border-t border-slate-800">
+            <p class="text-sm">Based on: Chen et al., <em>Ind. Eng. Chem. Res. 2021</em></p>
+        </footer>
+    </main>
+
+    <!-- SCRIPTS -->
+    <script>
+        // --- 1. DEEP DIVE GLOSSARY ---
+        const glossary = {
+            "Seeding Effect": "A crystallization strategy where existing crystals (seeds) serve as sites for solute deposition. In multi-stage injection (e.g., n=2), crystals formed at the first injection point act as seeds for the subsequent stage. When fresh antisolvent is added downstream, the generated supersaturation is consumed primarily by the growth of these existing seeds rather than by the formation of new nuclei. This suppresses secondary nucleation and increases the mean crystal size.",
+            "Nucleation spike": "A rapid, uncontrolled increase in the nucleation rate (B) occurring when supersaturation (ΔC) rises sharply above the metastable limit. In the context of antisolvent crystallization with single-stage injection (n=1), the sudden addition of all antisolvent creates a localized zone of extreme supersaturation. Since nucleation typically depends on supersaturation to a higher power (B ∝ ΔC^1.85) than growth (G ∝ ΔC^1.95), this spike triggers the formation of a vast number of new, tiny nuclei. This 'shower' of fines consumes the solute rapidly, preventing existing crystals from growing larger and resulting in a product with a small mean size and poor filtration properties.",
+            "Growth dominated": "A crystallization regime where the supersaturation is maintained within the metastable zone—high enough to drive crystal growth (G) but low enough to suppress primary nucleation (B). This is achieved in the multi-stage injection configuration (n=3). By adding the antisolvent incrementally at different positions, the local supersaturation is controlled, preventing the 'nucleation spike' seen in single-stage addition. The solute is preferentially deposited onto the surface of existing crystals rather than forming new nuclei. This regime is considered 'optimal' for pharmaceutical manufacturing because it yields larger, more uniform crystals with better downstream processing characteristics like flowability and filtration speed.",
+            "Low jet momentum": "A hydrodynamic condition occurring at low velocity ratios (typically r < 2) or when the feed is split into too many stages (n=4). In this state, the kinetic energy of the antisolvent jet is insufficient to overcome the inertia of the cross-flowing solvent. Instead of penetrating deep into the main pipe to mix at the center, the weak jet is immediately deflected and swept downstream near the wall. This lack of penetration prevents the formation of intense turbulent eddies necessary for micromixing. Consequently, mixing becomes dependent on slow molecular diffusion, leading to long mixing times, heterogeneous supersaturation profiles, and ultimately, a poor quality crystal product with a wide size distribution.",
+            "back-splash": "An unstable flow phenomenon observed at high velocity ratios (typically r ≥ 6) in impinging jet reactors. It occurs when the momentum of the colliding jets is so high that the fluid cannot evacuate downstream fast enough. The excess kinetic energy forces the fluid to flow upstream against the main cross-flow direction. This creates large recirculation zones or eddies where fluid and crystals can become trapped. This trapping effect increases the residence time distribution variance, meaning some crystals stay in the reactor much longer than others, leading to uneven growth, agglomeration, and a broader crystal size distribution, which is generally undesirable.",
+            "Turbulent impingement": "The ideal flow regime for mixing-sensitive processes like antisolvent crystallization, typically achieved at a velocity ratio around r=4. In this state, the opposing radial jets possess sufficient momentum to pierce through the boundary layer of the cross-flow and collide directly with each other at the geometric center of the reactor. This high-energy collision converts the directed kinetic energy of the jets into intense, isotropic turbulence. The resulting high energy dissipation rate (ε) shreds fluid elements down to the microscopic Kolmogorov scale, ensuring that mixing occurs almost instantaneously (micromixing time ≈ 0.04s), creating a uniform environment for crystallization.",
+            "Stratified flow": "A laminar-like flow pattern characterizing the 'Low jet momentum' regime (r=1). Here, the solvent and antisolvent streams flow parallel to each other with very little interaction or intermingling. The interface between the two fluids remains relatively smooth, and mass transfer is limited to slow diffusion across this interface. Because there is no turbulent convective mixing to homogenize the solution, distinct layers of high and low concentration persist for a long distance down the reactor. This stratification results in extremely long mixing times and significant spatial variations in supersaturation, causing some regions to nucleate heavily while others remain undersaturated.",
+            "API": "Active Pharmaceutical Ingredient. The biologically active component in a drug product that produces the intended health effects. In crystallization processes, the API is the solute being precipitated from the solution. Controlling its crystal size, shape (morphology), and purity is critical because these factors directly influence how fast the drug dissolves in the body (bioavailability) and how stable it is during shelf storage.",
+            "Accumulation": "In the context of conservation laws (like mass or momentum balance), accumulation refers to the time rate of change of a quantity within a specific control volume. Mathematically represented as ∂(property)/∂t, it tells us how much of a substance or energy is building up or depleting at a specific point in space over time. In steady-state processes, the accumulation term is zero.",
+            "Convection": "The mechanism of transport resulting from the bulk motion of a fluid. In the conservation equations, the convective term (∇·(ρUΦ)) describes how a property Φ (like crystal density or momentum) is carried along by the velocity field of the fluid. In impinging jets, convection is the primary driver that brings the solvent and antisolvent streams together before turbulent diffusion mixes them.",
+            "Pressure Gradient": "A vector field representing the rate and direction of pressure change in a fluid. Fluids naturally flow from high pressure to low pressure, driven by the force generated by this gradient (-∇p). In the Navier-Stokes equations, the pressure gradient is a primary source term that drives fluid motion, accelerating the fluid through the nozzles and into the reactor chamber.",
+            "Viscous Stress": "Internal friction forces within a moving fluid caused by the resistance of fluid layers sliding past one another. It is proportional to the velocity gradient and the fluid's viscosity. In turbulent flows, the 'effective' stress is a combination of molecular viscosity and 'turbulent viscosity' (generated by eddies), which dissipates kinetic energy into heat and dampens flow fluctuations.",
+            "Nucleation": "The birth of new crystal particles from a liquid solution. It occurs when supersaturation exceeds a critical threshold (metastable limit), causing solute molecules to cluster into stable solid nuclei. Primary nucleation occurs spontaneously in clear solutions, while secondary nucleation is induced by the presence of existing crystals. In this study, controlling nucleation is key to preventing the formation of excessive 'fines' (dust).",
+            "Death": "In Population Balance Equations (PBE), 'death' refers to the disappearance of particles from a specific size category (bin). This doesn't mean the crystals vanish; rather, they leave that size bin because they have either grown larger (growth), aggregated with other crystals to form a larger clump, or broken apart into smaller pieces (breakage).",
+            "Explosive Nucleation": "A phenomenon where extremely high supersaturation causes a massive, instantaneous burst of new nuclei. This 'shower' of particles rapidly consumes the available solute, leaving little supersaturation for growth. The result is a product consisting of billions of tiny, difficult-to-filter crystals (fines). This simulation aims to avoid this regime by using staged injection.",
+            "Recirculation": "A flow pattern where fluid turns back on itself, often forming a loop or eddy. In impinging jets, if the jet velocity is too high (r=6), the momentum forces the fluid to flow upstream against the main current ('back-splash'). This creates recirculation zones where crystals can get trapped, leading to broad residence time distributions and uneven crystal sizes.",
+            "PBE": "Population Balance Equation. A rigorous mathematical framework used to track the distribution of properties (usually particle size) within a population of particles. Unlike standard fluid dynamics which treats phases as continuous, PBE accounts for discrete events like nucleation (birth), growth, aggregation, and breakage, allowing engineers to predict the full Crystal Size Distribution (CSD).",
+            "CFD": "Computational Fluid Dynamics. A branch of fluid mechanics that uses numerical analysis and data structures to analyze and solve problems that involve fluid flows. Computers are used to perform the calculations required to simulate the free-stream flow of the fluid, and the interaction of the fluid (liquids and gases) with surfaces defined by boundary conditions.",
+            "Impinging Jet": "A reactor configuration where two or more streams of fluid are forced to collide at high velocities. The collision converts the kinetic energy of the jets into intense turbulent kinetic energy dissipation. This generates rapid micromixing at the molecular scale, which is essential for fast chemical reactions like precipitation or antisolvent crystallization.",
+            "Supersaturation": "The state where a solution contains more of the dissolved material than could be dissolved by the solvent under normal equilibrium conditions. It is the thermodynamic driving force for crystallization. The level of supersaturation determines whether the system will favor nucleation (creating new crystals) or growth (enlarging existing ones).",
+            "Velocity Ratio": "A dimensionless number (r) defined as the ratio of the jet velocity to the cross-flow velocity (r = u_jet / u_cross). It is the critical hydrodynamic parameter in this study. Low ratios lead to stratified flow (poor mixing), while an optimal ratio (around 4) ensures the jets penetrate to the centerline and impinge, creating maximum turbulence.",
+            "Feed Stages": "The number of distinct points (n) along the reactor length where the antisolvent is injected. By splitting the total antisolvent volume into multiple stages (e.g., n=3), the simulation shows that supersaturation can be kept at a moderate level throughout the reactor, favoring crystal growth over nucleation.",
+            "Micromixing": "Mixing at the smallest scale of fluid motion (the Kolmogorov scale) where molecular diffusion takes place. While 'macromixing' distributes fluid around the vessel, micromixing brings molecules into intimate contact. For fast processes like precipitation, micromixing time must be shorter than the nucleation induction time to ensure a uniform product.",
+            "Eulerian-Eulerian": "A multiphase modeling approach in CFD where both the continuous phase (liquid) and the dispersed phase (crystals) are treated as interpenetrating continua. They share the same volume, and conservation equations for mass and momentum are solved for each phase, coupled by interaction terms like drag and lift.",
+            "Wen-Yu Drag": "A semi-empirical correlation used to calculate the drag force between fluid and solid particles. It is specifically derived for power-law fluids or dilute particle suspensions where the solid volume fraction is low (typically < 20%). It corrects the standard drag coefficient based on the local void fraction.",
+            "Minmod Limiter": "A non-linear flux limiter used in high-resolution numerical schemes (like MUSCL) for solving partial differential equations. It prevents spurious oscillations (wiggles) near sharp gradients or discontinuities (shocks) in the solution, ensuring the calculated crystal size distribution remains physical (no negative concentrations).",
+            "Growth Term": "The term in the PBE (∂(Gn)/∂L) that describes the convection of particles along the size coordinate. Just as fluid convection moves particles through physical space, the growth term moves particles from 'small size' bins to 'large size' bins at a rate determined by the growth rate G.",
+            "Thermally Sensitive": "Refers to chemical compounds (like certain APIs) that decompose, degrade, or lose potency when exposed to high temperatures. Antisolvent crystallization is a preferred method for processing these compounds because it can be conducted at ambient or low temperatures, unlike evaporative crystallization which requires heat.",
+            "Multi-stage Injection": "A process intensification strategy where the antisolvent feed is distributed across multiple injection points along the reactor length (e.g., n=1 to 4). This technique effectively controls the local supersaturation profile. Instead of a single massive spike in supersaturation (which triggers explosive nucleation of fines), staging the addition maintains supersaturation within the metastable zone. This favors the growth of existing crystals over the formation of new ones, resulting in a larger mean crystal size and a narrower size distribution.",
+            "pharmaceutical": "Relating to medicinal drugs. In the context of this research, the focus is on Paracetamol (Acetaminophen). The physical properties of pharmaceutical crystals—specifically size and shape—dictate their bioavailability (how fast they dissolve in the body) and manufacturing properties (flowability, tablet compaction). This study uses paracetamol as a model system to demonstrate how advanced reactor design (CFD-PBE modeling) can optimize these critical quality attributes without extensive, costly physical experimentation.",
+            "Antisolvent": "A solvent in which the compound of interest (solute) is insoluble or sparingly soluble. When added to the solution containing the solute, it reduces the solubility power of the mixture, generating supersaturation. In this simulation, water acts as the antisolvent for paracetamol dissolved in ethanol/isopropanol. Unlike cooling crystallization, antisolvent crystallization allows for operation at ambient temperatures, preventing the thermal degradation of heat-sensitive active pharmaceutical ingredients.",
+            "Mixing Efficiency": "A measure of how quickly and uniformly the solvent and antisolvent streams blend at the molecular level (micromixing). In antisolvent crystallization, mixing must be faster than the nucleation induction time. If mixing is poor (macromixing dominated), local 'hotspots' of high supersaturation occur near the injection point, causing uncontrolled nucleation showers. High mixing efficiency, achieved here via turbulent jet impingement, ensures a homogeneous supersaturation field, leading to uniform crystal growth and reproducible product quality.",
+            "Optimal Ratio": "Refers to the specific velocity ratio (r) of the jet velocity to the cross-flow velocity that yields the best mixing performance. This study identifies r=4 as the optimal point. At this ratio, the radial jets have sufficient momentum to penetrate the cross-flow boundary layer and collide in the center of the pipe. This collision maximizes the dissipation of turbulent kinetic energy, reducing mixing time to approximately 0.04 seconds and ensuring intense micromixing without causing unstable flow reversal.",
+            "Crystal Size Distribution": "A statistical metric representing the range of crystal sizes present in a batch (CSD). A narrow CSD (monodisperse) is highly desired in pharmaceutical manufacturing because it ensures consistent dissolution rates, prevents segregation during tableting, and improves filtration speed. A broad CSD (polydisperse) often contains excessive fines (dust) which clog filters and dry slowly. This simulation uses the Population Balance Equation (PBE) to predict the CSD by tracking nucleation, growth, and aggregation events.",
+            "NUCLEATION RATE (B)": "The rate at which new crystal nuclei form per unit volume per unit time. It follows a power-law relationship dependent on supersaturation: B = k * (ΔC)^b. In this study, paracetamol nucleation is shown to be extremely sensitive to supersaturation (high exponent). This means a small increase in concentration difference triggers a massive burst of new particles. Controlling B is the primary goal of the reactor design; the aim is to suppress B to favor growth (G).",
+            "GROWTH RATE (G)": "The rate at which existing crystal surfaces advance outward, increasing the particle size. Like nucleation, it depends on supersaturation: G = k * (ΔC)^g. However, growth generally has a lower dependency order than nucleation. The engineering strategy demonstrated here (multi-stage injection) aims to maintain supersaturation in a 'sweet spot'—high enough to drive Growth (G) but low enough to prevent excessive Nucleation (B), thereby producing larger, higher-quality crystals.",
+            "Regime": "In fluid dynamics, a regime describes a distinct behavioral state of the flow pattern. This study identifies three specific regimes based on the velocity ratio (r): 1) The Stratified Flow regime (r<2), where jets are weak and flow alongside the main stream; 2) The Turbulent Impingement regime (r=4), characterized by intense collision and mixing; and 3) The Back-splash regime (r>6), where excessive jet momentum forces fluid upstream, causing recirculation. Identifying the correct regime is critical for reactor stability.",
+            "Mixing Time": "The duration required for the mixture to achieve a specified degree of homogeneity (typically 95%). In reactive crystallization, this time scale is critical; it must be shorter than the reaction (precipitation) time to control the product properties. The simulation results show a dramatic non-linear relationship: mixing time drops from over 0.3 seconds in the stratified regime (r=1) to a mere 0.04 seconds in the impinging regime (r=4), highlighting the efficiency of the impinging jet design.",
+            "Mean Size": "The average dimension (volume-weighted mean diameter) of the final crystal population. It is a key quality attribute for pharmaceuticals. The study reveals a tradeoff: while high mixing (r=4) generally improves uniformity, single-stage injection leads to a smaller mean size (18µm) due to nucleation spikes. By switching to multi-stage injection (n=3), the mean size is successfully increased to 31µm because the supersaturation is distributed, allowing crystals more time to grow on existing nuclei.",
+            "interpenetrating fluids": "In the Eulerian-Eulerian multiphase model, the concept of interpenetrating fluids assumes that distinct phases (such as the liquid solvent and solid crystals) mathematically coexist at every point in the computational domain simultaneously. Instead of tracking discrete boundaries between individual crystals and the liquid, each phase is treated as a continuous medium or 'pseudo-fluid'. Their presence at any specific location is quantified by their respective volume fractions (alpha), which sum to unity. Conservation equations for mass and momentum are solved for each phase, coupled by interphase interaction terms like drag, allowing the simulation of complex suspension dynamics on a macroscopic scale."
+        };
+
+        const defBox = document.getElementById('def-box');
+        const defTitle = document.getElementById('def-title');
+        const defContent = document.getElementById('def-content');
+
+        document.querySelectorAll('.smart-term').forEach(term => {
+            term.addEventListener('mousemove', (e) => {
+                const key = term.getAttribute('data-term');
+                if (glossary[key]) {
+                    defBox.style.display = 'block';
+                    defTitle.textContent = key;
+                    defContent.textContent = glossary[key];
+                    
+                    const boxWidth = 450;
+                    let left = e.clientX + 20;
+                    let top = e.clientY + 20;
+
+                    if (left + boxWidth > window.innerWidth) {
+                        left = e.clientX - boxWidth - 20;
+                    }
+                    defBox.style.left = `${left}px`;
+                    defBox.style.top = `${top}px`;
                 }
-                
-                return specMatch && availMatch;
             });
-
-            renderDoctors(filteredDoctors);
-        }
-
-
-        // --- CHAT MESSAGING LOGIC ---
-
-        /**
-         * Handles sending a message from the patient input field.
-         */
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const messagesContainer = document.getElementById('chatMessages');
-            const messageText = input.value.trim();
-
-            if (messageText === "") return;
-
-            // Create new message bubble for the patient (right-aligned, blue bubble)
-            const newMessage = document.createElement('div');
-            newMessage.className = 'text-right text-xs';
-            newMessage.innerHTML = `<span class="bg-blue-100 p-2 rounded-lg inline-block max-w-[80%]">${messageText}</span>`;
-            
-            messagesContainer.appendChild(newMessage);
-            
-            // Clear input and scroll to bottom
-            input.value = '';
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            // Optional: Simulate a quick doctor response (for prototype only)
-            if (messageText.toLowerCase().includes("pain")) {
-                setTimeout(() => {
-                    const docMessage = document.createElement('div');
-                    docMessage.className = 'text-left text-xs';
-                    docMessage.innerHTML = `<span class="bg-green-100 p-2 rounded-lg inline-block max-w-[80%]">Dr. Sharma: Thank you. I am reviewing your vitals now.</span>`;
-                    messagesContainer.appendChild(docMessage);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 1500);
-            }
-        }
-
-        // --- PROTOTYPE NAVIGATION LOGIC ---
-
-        // Map of screens
-        const screens = {
-            loginScreen: document.getElementById('loginScreen'),
-            patientDashboard: document.getElementById('patientDashboard'),
-            doctorSelectionScreen: document.getElementById('doctorSelectionScreen'),
-            videoConsultationScreen: document.getElementById('videoConsultationScreen'),
-            medicineDeliveryScreen: document.getElementById('medicineDeliveryScreen'),
-            healthRecordsScreen: document.getElementById('healthRecordsScreen'),
-            doctorDashboard: document.getElementById('doctorDashboard'), 
-            bedAvailabilityScreen: document.getElementById('bedAvailabilityScreen'), 
-            medicineAvailabilityScreen: document.getElementById('medicineAvailabilityScreen'), 
-            patientRecordsManagementScreen: document.getElementById('patientRecordsManagementScreen'), 
-        };
-
-        let currentScreen = 'loginScreen';
-
-        /**
-         * Navigates to a new screen and updates the URL hash for history/back button support.
-         * @param {string} screenId - The ID of the screen to navigate to.
-         */
-        function navigate(screenId) {
-            if (currentScreen) {
-                // Ensure the current screen is hidden before navigating
-                const current = screens[currentScreen];
-                if (current) current.style.display = 'none';
-            }
-            
-            currentScreen = screenId;
-            const next = screens[currentScreen];
-            if (next) {
-                next.style.display = 'flex'; // Use 'flex' for all screens now
-            }
-            
-            window.location.hash = screenId;
-            window.scrollTo(0, 0); // Scroll to top on navigation
-
-            // IMPORTANT: Re-apply translations when the patient dashboard becomes visible
-            if (screenId === 'patientDashboard') {
-                applyTranslations(currentLanguage);
-            }
-        }
-
-        // Initialize the prototype based on hash or default
-        window.onload = function() {
-            // Render doctors immediately upon loading
-            renderDoctors(initialDoctors);
-            
-            const hash = window.location.hash.substring(1);
-            if (hash && screens[hash]) {
-                currentScreen = hash;
-            }
-            screens[currentScreen].style.display = 'flex';
-            
-            // Initial translation application for the login screen
-            applyTranslations(document.getElementById('interfaceLanguage').value);
-        };
-
-        // Handle back/forward buttons using hashchange
-        window.addEventListener('hashchange', () => {
-            const hash = window.location.hash.substring(1);
-            if (hash && screens[hash] && hash !== currentScreen) {
-                navigate(hash);
-            } else if (!hash) {
-                 navigate('loginScreen');
-            }
+            term.addEventListener('mouseleave', () => defBox.style.display = 'none');
         });
+
+        // --- 2. SCHEMATIC CANVAS (UPDATED v10) ---
+        function drawSchematic() {
+            const canvas = document.getElementById('schematicCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set scale
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = 400;
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+
+            ctx.clearRect(0,0,w,h);
+            ctx.font = 'bold 12px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // --- COMPONENTS ---
+
+            // 1. Solution Tank (Left)
+            const tank1X = 60, tank1Y = 220, tankW = 50, tankH = 60;
+            ctx.fillStyle = '#fef08a'; // Yellow-200
+            ctx.fillRect(tank1X, tank1Y + 10, tankW, tankH - 10); // Liquid
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+            ctx.strokeRect(tank1X, tank1Y, tankW, tankH); // Tank Outline
+            
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Solution', tank1X + tankW/2, tank1Y - 15);
+            ctx.fillText('Feed (1)', tank1X + tankW/2, tank1Y + tankH + 15);
+
+            // 2. Antisolvent Tank (Right)
+            const tank2X = w - 110, tank2Y = 220;
+            ctx.fillStyle = '#bbf7d0'; // Green-200
+            ctx.fillRect(tank2X, tank2Y + 10, tankW, tankH - 10);
+            ctx.strokeRect(tank2X, tank2Y, tankW, tankH);
+
+            ctx.fillStyle = '#475569';
+            ctx.fillText('Antisolvent', tank2X + tankW/2, tank2Y - 15);
+            ctx.fillText('Feed (2)', tank2X + tankW/2, tank2Y + tankH + 15);
+
+            // 3. Reactor Column (Center)
+            const colW = 30, colH = 280, colY = 40;
+            const grd = ctx.createLinearGradient(cx-15, colY, cx+15, colY);
+            grd.addColorStop(0, '#fef08a');
+            grd.addColorStop(1, '#bbf7d0');
+            
+            // Draw column later to layer over pipes
+
+            // 4. Pumps (3)
+            const pumpSize = 24;
+            const pump1X = 120, pump1Y = 240; // Left Pump
+            const pump2X = w - 160, pump2Y = 240; // Right Pump
+
+            // --- PIPING & ARROWS ---
+            ctx.beginPath(); ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+
+            // Path 1: Solution -> Pump -> Top
+            ctx.moveTo(tank1X + tankW, tank1Y + 20);
+            ctx.lineTo(pump1X, pump1Y + 12); // Into pump
+            ctx.moveTo(pump1X + pumpSize, pump1Y + 12); // Out of pump
+            ctx.lineTo(cx - 40, pump1Y + 12); // Horizontal to center-ish
+            ctx.lineTo(cx - 40, 20); // Up to top
+            ctx.lineTo(cx, 20); // Into top
+            ctx.lineTo(cx, colY); // Connect
+            ctx.stroke();
+
+            // Arrow: Cross Flow
+            drawArrow(ctx, cx, 20, cx, colY + 5, "Cross Flow");
+
+            // Path 2: Antisolvent -> Pump -> SPLIT to Left/Right Jets
+            ctx.beginPath();
+            // Tank to Pump
+            ctx.moveTo(tank2X, tank2Y + 20);
+            ctx.lineTo(pump2X + pumpSize, pump2Y + 12);
+            // Pump Out
+            ctx.moveTo(pump2X, pump2Y + 12);
+            // Go Up
+            const splitX = cx + 80;
+            const splitY = 106;
+            ctx.lineTo(splitX, pump2Y + 12); // Horizontal Left
+            ctx.lineTo(splitX, splitY); // Up to Jet Level
+            
+            // Branch Right Jet
+            ctx.lineTo(cx + 60, splitY); // To Right Jet Inlet
+            
+            // Branch Left Jet (Behind column)
+            // We draw the long horizontal line first
+            ctx.moveTo(splitX, splitY);
+            ctx.lineTo(cx - 60, splitY); // All the way to Left Jet Inlet
+            
+            ctx.stroke();
+
+            // Arrows on Jet Lines
+            drawArrow(ctx, cx + 80, splitY, cx + 50, splitY, "Jet Flow"); // Right
+            drawArrow(ctx, cx - 40, splitY, cx - 60, splitY, "Jet Flow"); // Left (from behind)
+
+            // Draw Column NOW (to overlay the pipe behind it)
+            ctx.fillStyle = grd;
+            ctx.fillRect(cx - 15, colY, colW, colH);
+            ctx.strokeRect(cx - 15, colY, colW, colH);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('Jet Crystallizer (4)', cx + 80, colY + colH - 20);
+
+            // Side Inlets (Jets)
+            ctx.fillStyle = '#bbf7d0'; // Green flow
+            ctx.fillRect(cx - 60, 100, 45, 12); // Left arm
+            ctx.strokeRect(cx - 60, 100, 45, 12);
+            ctx.fillRect(cx + 15, 100, 45, 12); // Right arm
+            ctx.strokeRect(cx + 15, 100, 45, 12);
+
+            // Draw Pumps on top of lines
+            ctx.fillStyle = '#e2e8f0'; ctx.fillRect(pump1X, pump1Y, pumpSize, pumpSize);
+            ctx.strokeRect(pump1X, pump1Y, pumpSize, pumpSize);
+            ctx.fillStyle = '#0f172a'; ctx.fillText('P', pump1X + 12, pump1Y + 12);
+            ctx.fillText('Pump (3)', pump1X + 12, pump1Y + 35);
+
+            ctx.fillStyle = '#e2e8f0'; ctx.fillRect(pump2X, pump2Y, pumpSize, pumpSize);
+            ctx.strokeRect(pump2X, pump2Y, pumpSize, pumpSize);
+            ctx.fillStyle = '#0f172a'; ctx.fillText('P', pump2X + 12, pump2Y + 12);
+            ctx.fillText('Pump (3)', pump2X + 12, pump2Y + 35);
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, label) {
+            const headlen = 10; 
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.fillStyle = "#0f172a";
+            ctx.fill();
+
+            // Label
+            ctx.fillStyle = "#2563eb";
+            ctx.font = "bold 11px Inter";
+            ctx.fillText(label, fromX + (dx/2), fromY + (dy/2) - 12);
+        }
+
+        window.addEventListener('resize', drawSchematic);
+        // Delay to ensure container size is ready
+        setTimeout(drawSchematic, 100);
+
+        // --- 3. VIRTUAL SIMULATION (STREAMLINES) ---
+        const simCanvas = document.getElementById('simCanvas');
+        const sctx = simCanvas.getContext('2d');
+        let rVal = 4;
+        let nVal = 3;
+        let particles = [];
         
-        // Allow sending message by pressing Enter key on the chat input
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const chatInput = document.getElementById('chatInput');
-                if (chatInput && chatInput === document.activeElement) {
-                    sendMessage();
+        function resizeSim() {
+            simCanvas.width = simCanvas.parentElement.offsetWidth;
+            simCanvas.height = 500;
+        }
+        window.addEventListener('resize', resizeSim);
+        resizeSim();
+
+        class Particle {
+            constructor(type, nozzleIdx = 0) {
+                this.type = type; // 0=solvent, 1=jet
+                this.reset(0);
+            }
+
+            reset(nozzleIdx) {
+                const cx = simCanvas.width / 2;
+                if (this.type === 0) {
+                    this.x = cx + (Math.random()-0.5)*40;
+                    this.y = 0;
+                    this.vx = (Math.random()-0.5)*0.5;
+                    this.vy = 2 + Math.random();
+                } else {
+                    const startY = 150;
+                    const spacing = 60;
+                    this.y = startY + (nozzleIdx * spacing) + (Math.random()*10);
+                    
+                    if (Math.random() > 0.5) {
+                        this.x = cx - 80; this.vx = rVal * 1.5;
+                    } else {
+                        this.x = cx + 80; this.vx = -rVal * 1.5;
+                    }
+                    this.vy = 0;
+                }
+                this.life = 1.0;
+            }
+
+            update() {
+                const cx = simCanvas.width / 2;
+                this.x += this.vx; this.y += this.vy; this.life -= 0.005;
+
+                const startY = 150; const spacing = 60;
+                let inZone = false;
+
+                for(let i=0; i<nVal; i++) {
+                    let zy = startY + (i * spacing);
+                    let dx = Math.abs(this.x - cx);
+                    let dy = Math.abs(this.y - zy);
+                    
+                    if(dx < 25 && dy < 25) {
+                        inZone = true;
+                        if(rVal === 1) { 
+                            this.vx *= 0.8; 
+                            this.vy += 0.2;
+                        } else if (rVal === 4) { 
+                            this.vx += (Math.random()-0.5)*6; 
+                            this.vy += (Math.random()-0.5)*6; 
+                            this.vy += 0.3; 
+                        } else if (rVal === 6) { 
+                            if(this.y > zy-15) { 
+                                this.vy -= 0.6; 
+                                this.vx += (Math.random()-0.5)*8;
+                            }
+                        }
+                    }
+                }
+
+                if(!inZone) { this.vx *= 0.95; this.vy += 0.1; if(this.vy > 4) this.vy = 4; }
+                if(this.y > 150 && (this.x < cx-30 || this.x > cx+30)) { if(this.x < cx) this.x = cx-30; else this.x = cx+30; }
+                
+                if(this.y > simCanvas.height || this.life <= 0) {
+                    this.reset(Math.floor(Math.random() * nVal));
+                }
+            }
+
+            draw() {
+                sctx.globalAlpha = this.life;
+                sctx.fillStyle = this.type === 0 ? '#94a3b8' : (rVal === 6 ? '#fb923c' : '#2dd4bf');
+                sctx.beginPath(); sctx.arc(this.x, this.y, 2, 0, Math.PI*2); sctx.fill();
+            }
+        }
+
+        // Init Particles
+        let jetCounter = 0;
+        for(let i=0; i<800; i++) {
+            const isJet = i%3===0;
+            const p = new Particle(isJet ? 1 : 0);
+            if(isJet) {
+                p.reset(jetCounter % nVal);
+                jetCounter++;
+            }
+            particles.push(p);
+        }
+
+        function animateSim() {
+            // Trail effect
+            sctx.fillStyle = 'rgba(15, 23, 42, 0.2)'; 
+            sctx.fillRect(0, 0, simCanvas.width, simCanvas.height);
+            
+            const cx = simCanvas.width / 2;
+            const startY = 150; const spacing = 60;
+
+            sctx.strokeStyle = '#334155'; sctx.lineWidth = 4;
+            sctx.beginPath(); sctx.moveTo(cx-30, 0); sctx.lineTo(cx-30, 500); sctx.moveTo(cx+30, 0); sctx.lineTo(cx+30, 500); sctx.stroke();
+
+            sctx.fillStyle = '#1e293b';
+            for(let i=0; i<nVal; i++) {
+                let y = startY + (i*spacing);
+                sctx.fillRect(cx-70, y-10, 40, 20); sctx.strokeRect(cx-70, y-10, 40, 20);
+                sctx.fillRect(cx+30, y-10, 40, 20); sctx.strokeRect(cx+30, y-10, 40, 20);
+            }
+
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateSim);
+        }
+        animateSim();
+
+        function updateSim() {
+            const rInputs = document.getElementsByName('rVal');
+            for(let r of rInputs) if(r.checked) rVal = parseInt(r.value);
+            
+            const nInputs = document.getElementsByName('nVal');
+            for(let n of nInputs) if(n.checked) nVal = parseInt(n.value);
+
+            let jc = 0;
+            particles.forEach(p => {
+                if(p.type === 1) {
+                    p.reset(jc % nVal);
+                    jc++;
+                }
+            });
+            updateStats();
+        }
+
+        function updateStats() {
+            const regime = document.getElementById('stat-regime');
+            const time = document.getElementById('stat-time');
+            const size = document.getElementById('stat-size');
+            const desc = document.getElementById('sim-desc');
+            const bars = {
+                regime: document.getElementById('bar-regime'),
+                time: document.getElementById('bar-time'),
+                size: document.getElementById('bar-size')
+            };
+
+            if(rVal === 1) {
+                regime.innerText = "Stratified"; regime.style.color = "#f87171";
+                bars.regime.className = "h-full bg-red-500 w-full transition-all duration-500";
+                time.innerText = "> 0.3s"; bars.time.style.width = "10%";
+                size.innerText = "10 µm"; bars.size.style.width = "20%";
+                desc.innerHTML = "<strong>r=1 (Stratified):</strong> Streamlines flow parallel. No mixing. Poor results.";
+            } else if (rVal === 4) {
+                regime.innerText = "Turbulent"; regime.style.color = "#4ade80";
+                bars.regime.className = "h-full bg-green-500 w-full transition-all duration-500";
+                time.innerText = "0.04s"; bars.time.style.width = "95%";
+                
+                if(nVal === 1) {
+                    size.innerText = "18 µm"; bars.size.style.width = "50%";
+                    desc.innerHTML = "<strong>n=1:</strong> High mixing, but nucleation spike limits size.";
+                } else if (nVal === 3) {
+                    size.innerText = "31 µm"; bars.size.style.width = "95%";
+                    desc.innerHTML = "<strong>n=3 (Optimal):</strong> Perfect balance. Growth dominated.";
+                } else if (nVal === 4) {
+                    size.innerText = "25 µm"; bars.size.style.width = "70%";
+                    desc.innerHTML = "<strong>n=4:</strong> Jet velocity too low. Mixing degrades.";
+                } else {
+                    size.innerText = "22 µm"; bars.size.style.width = "60%";
+                    desc.innerHTML = "<strong>n=2:</strong> Better than n=1.";
+                }
+            } else {
+                regime.innerText = "Backsplash"; regime.style.color = "#fb923c";
+                bars.regime.className = "h-full bg-orange-500 w-full transition-all duration-500";
+                time.innerText = "0.05s"; bars.time.style.width = "85%";
+                size.innerText = "20 µm"; bars.size.style.width = "55%";
+                desc.innerHTML = "<strong>r=6 (Backsplash):</strong> Streamlines force upstream. Unstable recirculation.";
+            }
+        }
+        updateStats();
+
+        // --- Charts ---
+        const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+
+        // CSD Validation
+        new Chart(document.getElementById('chartCSD'), {
+            type: 'line',
+            data: {
+                labels: [0, 10, 20, 30, 40, 50, 60],
+                datasets: [
+                    { label: 'Experiment', data: [0, 0.12, 0.245, 0.14, 0.02, 0, 0], borderColor: '#dc2626', borderWidth: 2, tension: 0.4, pointRadius: 0 },
+                    { label: 'Simulation', data: [0, 0.15, 0.24, 0.12, 0.01, 0, 0], borderColor: '#2563eb', borderWidth: 2, borderDash: [5,5], tension: 0.4 }
+                ]
+            },
+            options: { ...commonOpts, scales: { x: {title:{display:true, text:'Crystal Size (µm)'}}, y: {title:{display:true, text:'Mass Fraction'}} } }
+        });
+
+        // Grid Independence
+        new Chart(document.getElementById('chartGrid'), {
+            type: 'line',
+            data: {
+                labels: ['3.1e5', '6.3e5', '9.2e5', '1.18e6', '1.4e6'],
+                datasets: [
+                    { label: 'Avg Velocity (m/s)', data: [0.7, 0.93, 1.0, 1.02, 1.04], borderColor: '#2563eb', yAxisID: 'y' },
+                    { label: 'Total Crystal Mass', data: [0.052, 0.072, 0.086, 0.096, 0.098], borderColor: '#dc2626', yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                ...commonOpts,
+                scales: {
+                    x: { title: {display:true, text:'Grid Number (Cells)'} },
+                    y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'Velocity (m/s)'} },
+                    y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display:true, text:'Mass Fraction'} }
                 }
             }
         });
 
-        // --- CUSTOM MESSAGE BOX LOGIC (replaces alert()) ---
+        // Mixing Time
+        new Chart(document.getElementById('chartMixing'), {
+            type: 'bar',
+            data: {
+                labels: ['r=1', 'r=2', 'r=4', 'r=6'],
+                datasets: [{
+                    label: 'Mixing Time (s)',
+                    data: [0.35, 0.20, 0.04, 0.043],
+                    backgroundColor: ['#fca5a5', '#fdba74', '#86efac', '#fdba74']
+                }]
+            },
+            options: {
+                ...commonOpts,
+                scales: {
+                    x: { title: {display:true, text:'Velocity Ratio (r)'} },
+                    y: { title: {display:true, text:'Mixing Time (s)'} }
+                }
+            }
+        });
 
-        const messageBox = document.getElementById('messageBox');
-        const messageBoxText = document.getElementById('messageBoxText');
-        const messageBoxIcon = document.getElementById('messageBoxIcon');
+        // Multi-Staging (UPDATED)
+        new Chart(document.getElementById('chartStaging'), {
+            type: 'line',
+            data: {
+                labels: [0, 10, 20, 30, 40, 50, 60, 70],
+                datasets: [
+                    { label: 'n=1 (Peak ~18µm)', data: [0, 0.15, 0.24, 0.05, 0, 0, 0, 0], borderColor: '#6b7280', backgroundColor: 'rgba(107,114,128,0.1)', tension: 0.4 },
+                    { label: 'n=2 (Peak ~22µm)', data: [0, 0.05, 0.18, 0.22, 0.08, 0, 0, 0], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.4 },
+                    { label: 'n=3 (Peak ~35µm)', data: [0, 0.0, 0.05, 0.20, 0.21, 0.08, 0.01, 0], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4 },
+                    { label: 'n=4 (Peak ~30µm)', data: [0, 0.01, 0.10, 0.17, 0.14, 0.04, 0, 0], borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.1)', tension: 0.4 }
+                ]
+            },
+            options: {
+                ...commonOpts,
+                scales: { 
+                    x: {title:{display:true, text:'Crystal Size (µm)'}}, 
+                    y: {title:{display:true, text:'Mass Fraction'}} 
+                } 
+            }
+        });
 
-        function showMessageBox(message, iconBgColor = 'bg-primary') {
-            messageBoxIcon.className = 'text-4xl text-center mb-4 text-white p-2 rounded-full mx-auto w-14 h-14 flex items-center justify-center ' + iconBgColor;
-            
-            let iconSymbol = 'ℹ️'; 
-            if (message.includes('EMERGENCY')) { iconSymbol = '🚨'; }
-            else if (message.includes('successfully')) { iconSymbol = '✅'; }
-            else if (message.includes('Coming Soon') || message.includes('coming soon')) { iconSymbol = '👨‍💻'; }
-            else if (message.includes('Audio Only') || message.includes('हिन्दी') || message.includes('ਪੰਜਾਬੀ')) { iconSymbol = '🔈'; }
-
-
-            messageBoxIcon.innerHTML = iconSymbol;
-            messageBoxText.innerText = message;
-            messageBox.style.display = 'flex';
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`content-${id}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('active'); btn.classList.add('inactive'); });
+            const btn = document.getElementById(`tab-${id}`);
+            btn.classList.remove('inactive'); btn.classList.add('active');
         }
-
-        function hideMessageBox() {
-            messageBox.style.display = 'none';
-        }
-
     </script>
 </body>
 </html>
